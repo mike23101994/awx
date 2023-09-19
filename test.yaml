@@ -1,0 +1,18 @@
+- name: Assume IAM Role in Account B
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Assume Role
+      shell: |
+        aws sts assume-role \
+          --role-arn "arn:aws:iam::873579038761:role/Trusted-Role" \
+          --role-session-name "SessionName"
+      register: assumed_role
+
+    - name: Set AWS Environment Variables
+      set_fact:
+        AWS_ACCESS_KEY_ID: "{{ assumed_role.sts.Credentials.AccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ assumed_role.sts.Credentials.SecretAccessKey }}"
+        AWS_SESSION_TOKEN: "{{ assumed_role.sts.Credentials.SessionToken }}"
+
+    # Add tasks here to perform actions in Account B using the temporary credentials.
