@@ -1,0 +1,54 @@
+
+--------------------------------
+INSTALL K3S
+yum install -y container-selinux
+yum install -y https://github.com/k3s-io/k3s-selinux/releases/download/v1.4.stable.1/k3s-selinux-1.4-1.el8.noarch.rpm
+curl -sfL https://get.k3s.io | sh -
+curl -sfL https://get.k3s.io | sh -
+	2) sudo systemctl status k3s
+	3) mkdir -p ~/.kube
+	4) sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+	5) sudo chown $(id -u):$(id -g) ~/.kube/config
+	6) kubectl get nodes
+
+
+INSTALL HELM
+
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod +x get_helm.sh
+./get_helm.sh
+helm version
+
+ADD HELM REPO
+
+add repo
+helm repo add awx-operator https://ansible.github.io/awx-operator/
+helm repo update
+helm install ansible-awx-operator awx-operator/awx-operator -n awx --create-namespace
+
+kubectl get pods -n awx
+
+CREATE MANIFEST FILES
+
+
+kubectl create -f local-storage-class.yaml
+kubectl create -f pv.yaml
+kubectl create -f pvc.yaml
+kubectl get pv,pvc -n awx
+kubectl create -f ansible-awx.yaml
+kubectl expose deployment ansible-awx-web --name ansible-awx-web-svc --type NodePort -n awx -->This command will create a NodePort service that maps the AWX web container’s port to a port on the Kubernetes node. 
+kubectl get svc ansible-awx-web-svc  -n awx
+kubectl get secrets -n awx | grep -i admin-password
+kubectl get secret ansible-awx-admin-password -o jsonpath="{.data.password}" -n awx | base64 --decode ; echo
+
+
+FOLLOW THIS PAGE:-
+
+https://www.linuxtechi.com/install-ansible-awx-on-kubernetes-cluster/#google_vignette
+
+
+http://172.31.24.128:31843
+
+
+
+
