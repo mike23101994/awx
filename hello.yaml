@@ -1,0 +1,8 @@
+---
+- name: Run Hello World on Windows
+  hosts: windows-host-1  # Replace with the actual hostname or group name of your Windows host in the inventory
+  gather_facts: no       # Disable facts gathering for Windows hosts
+
+  tasks:
+    - name: Execute Hello World
+      win_command: echo "Hello, World!" > C:\hello.txt
