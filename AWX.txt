@@ -41,6 +41,8 @@ kubectl get svc ansible-awx-web-svc  -n awx
 kubectl get secrets -n awx | grep -i admin-password
 kubectl get secret ansible-awx-admin-password -o jsonpath="{.data.password}" -n awx | base64 --decode ; echo
 
+LJqGoNdZ9w0U0VWqptwQjoCksJ55oQzC
+
 
 FOLLOW THIS PAGE:-
 
