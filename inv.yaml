@@ -1,0 +1,9 @@
+plugin: aws_ec2
+regions:
+    - 'eu-central-1'
+hostnames:
+    - name: 'tag:Name'
+      prefix: 'test-'
+compose:
+    ansible_host: 172.31.31.18
+    inventory_hostname: 172.31.31.18
