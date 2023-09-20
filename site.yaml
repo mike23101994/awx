@@ -4,6 +4,24 @@
   gather_facts: no
 
   tasks:
+    - name: Install Python on Windows Hosts
+      win_command: msiexec.exe /i https://www.python.org/ftp/python/3.8.12/python-3.8.12-amd64.exe /qn
+      args:
+        creates: C:\Python38\python.exe
+      async: 1800
+      poll: 0
+      become: yes
+      when: ansible_os_family == "Windows"
+
+    - name: Install AWS CLI on Windows Hosts
+      win_command: msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi /qn
+      args:
+        creates: C:\Program Files\Amazon\AWSCLI\aws.exe
+      async: 1800
+      poll: 0
+      become: yes
+      when: ansible_os_family == "Windows"
+
     - name: Execute PowerShell Script
       ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/Users/Administrator/test.ps1
       register: ps_script_output
