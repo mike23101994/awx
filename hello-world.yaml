@@ -4,7 +4,9 @@
   gather_facts: false
   tasks:
     - name: Run basic PowerShell script
-      ansible.windows.win_powershell:
-        error_action: stop
-        script: |
-          Write-Output "Hello World"
+      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Output 'Hello World'"
+      register: powershell_output
+
+    - name: Display PowerShell output
+      debug:
+        var: powershell_output.stdout_lines
