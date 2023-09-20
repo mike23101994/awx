@@ -4,23 +4,37 @@
   gather_facts: no
 
   tasks:
-    - name: Install Python on Windows Hosts
-      win_command: msiexec.exe /i https://www.python.org/ftp/python/3.8.12/python-3.8.12-amd64.exe /qn
-      args:
-        creates: C:\Python38\python.exe
-      async: 1800
-      poll: 0
+    - name: Install Chocolatey on Windows Hosts
+      win_chocolatey:
+        name: chocolatey
+        state: present
       become: yes
-      when: "'Windows' in ansible_system"
+
+    - name: Install Python on Windows Hosts
+      win_chocolatey:
+        name: python
+        state: present
+      become: yes
+
 
     - name: Install AWS CLI on Windows Hosts
-      win_command: msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi /qn
-      args:
-        creates: C:\Program Files\Amazon\AWSCLI\aws.exe
-      async: 1800
-      poll: 0
+      win_chocolatey:
+        name: awscli
+        state: present
       become: yes
-      when: "'Windows' in ansible_system"
+
+
+    - name: Reboot Windows Hosts (if AWS CLI was installed)
+      win_reboot:
+      become: yes
+      when: "'Windows' in ansible_system and 'awscli' in ansible_choco.installed"
+
+    - name: Wait for hosts to become available after reboot
+      wait_for_connection:
+        delay: 60
+        timeout: 300
+      become: yes
+      when: "'awscli' in ansible_choco.installed"
 
     - name: Execute PowerShell Script
       ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/Users/Administrator/test.ps1
