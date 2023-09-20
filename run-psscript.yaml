@@ -5,7 +5,7 @@
 
   tasks:
     - name: Execute PowerShell Script
-      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/EASetups/powershellscripts/content.ps1
+      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/Users/Administrator/test.ps1
       register: ps_script_output
 
     - name: Display PowerShell Script Output
