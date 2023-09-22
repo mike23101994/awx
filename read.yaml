@@ -1,6 +1,6 @@
 ---
 - name: Check LogFolder Value
-  hosts: your_windows_host
+  hosts: all
   gather_facts: no
   tasks:
     - name: Read Configuration File
