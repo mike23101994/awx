@@ -33,6 +33,8 @@
         name: Every Angle Application Server
         state: stopped
       register: stop_service_result
+    - debug:
+        var: stop_service_result.stdout_lines
 
     - name: Check if Service is Running
       win_shell: Get-Service -Name "Every Angle Application Server" | Select-Object -ExpandProperty Status
@@ -40,13 +42,20 @@
 
     - name: Move Log File
       win_shell: |
-        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.txt"
+        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.log"
         $newLogFolderPath = "F:\Data\AppServer\log\logging"
-        if (-not (Test-Path $newLogFolderPath -PathType Container)) {
-          New-Item -Path $newLogFolderPath -ItemType Directory
+        if (-not (Test-Path $logFilePath -PathType Leaf)) {
+          Write-Host "Log file does not exist in the source location."
+        } else {
+          if (-not (Test-Path $newLogFolderPath -PathType Container)) {
+            New-Item -Path $newLogFolderPath -ItemType Directory
+          }
+          Move-Item -Path $logFilePath -Destination $newLogFolderPath
         }
-        Move-Item -Path $logFilePath -Destination $newLogFolderPath
       register: move_log_result
+      ignore_errors: yes
+    - debug:
+        var: move_log_result.stdout_lines
 
     - name: Update LogFolder
       win_shell: |
@@ -59,15 +68,19 @@
           $config.Save($configFile)
         }
       register: update_log_folder_result
+      ignore_errors: yes
+    - debug:
+        var: update_log_folder_result.stdout_lines
+
 
     - name: Start Service
       win_service:
-        name: YourServiceName
+        name: Every Angle Application Server
         state: started
       register: start_service_result
 
     - name: Check Service Status
-      win_shell: Get-Service -Name "YourServiceName" | Select-Object -ExpandProperty Status
+      win_shell: Get-Service -Name "Every Angle Application Server" | Select-Object -ExpandProperty Status
       register: service_status_after
 
     - name: Print Service Status Before
