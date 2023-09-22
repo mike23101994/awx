@@ -16,5 +16,5 @@
     - name: Print Service Status and LogFolder
       debug:
         var: 
-          - service_status.stdout_lines
-          - log_folder_value.stdout_lines
+          - service_status
+          - log_folder_value
