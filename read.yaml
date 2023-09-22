@@ -5,10 +5,13 @@
   tasks:
     - name: Read Configuration File
       win_shell: |
-        [xml]$config = Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
-        $logFolder = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
-        if ($logFolder -ne $null) {
-          $logFolderValue = $logFolder.value.Replace('\\\\', '\\')
+        $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
+        $configContent = [System.IO.File]::ReadAllText($configFile)
+        $logFolderPattern = '<add key="LogFolder" value="([^"]+)"'
+        $logFolderMatch = [regex]::Match($configContent, $logFolderPattern)
+        
+        if ($logFolderMatch.Success) {
+          $logFolderValue = $logFolderMatch.Groups[1].Value
           Write-Host "LogFolder Value: $logFolderValue"
         } else {
           Write-Host "LogFolder Not Found in Configuration"

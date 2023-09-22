@@ -8,17 +8,20 @@
       win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Every Angle Application Server" } | Select-Object DisplayName, Status
       register: service_status
 
-    - name: Retrieve LogFolder from Config File
-      win_shell: Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config" -Raw
-      register: config_content
-
-    - name: Extract LogFolder Value
-      set_fact:
-        log_folder_value: "{{ config_content.stdout | regex_search('<add key=\"LogFolder\" value=\"(.+?)\" />') | map(attribute='groups.1') | list | first }}"
-      ignore_errors: yes  # Ignore errors if the key is not found
+    - name: Read Configuration File
+      win_shell: |
+        [xml]$config = Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
+        $logFolder = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
+        if ($logFolder -ne $null) {
+          $logFolderValue = $logFolder.value.Replace('\\\\', '\\')
+          Write-Host "LogFolder Value: $logFolderValue"
+        } else {
+          Write-Host "LogFolder Not Found in Configuration"
+        }
+      register: result
 
     - name: Print Service Status and LogFolder
       debug:
         var: 
           - service_status
-          - log_folder_value
+          - result.stdout_lines
