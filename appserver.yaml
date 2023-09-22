@@ -24,4 +24,5 @@
       debug:
         var: 
           - service_status
-          - result.stdout_lines
+          - result
+
