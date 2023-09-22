@@ -1,6 +1,6 @@
 ---
 - name: Get Service Status and LogFolder
-  hosts: your_windows_server
+  hosts: all
   gather_facts: no
 
   tasks:
