@@ -1,5 +1,5 @@
 ---
-- name: Get Service Status
+- name: Get Service Status and LogFolder
   hosts: all
   gather_facts: no
 
@@ -8,6 +8,13 @@
       win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Every Angle Application Server" } | Select-Object DisplayName, Status
       register: service_status
 
-    - name: Print Service Status
+    - name: Retrieve LogFolder from Config File
+      win_shell: Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config" | Select-String -Pattern "<add key='LogFolder' value='(.+)' />" | ForEach-Object { $_.Matches.Groups[1].Value }
+      register: log_folder_value
+      ignore_errors: yes  # Ignore errors if the config file or key is not found
+
+    - name: Print Service Status and LogFolder
       debug:
-        var: service_status.stdout_lines
+        var: 
+          - service_status.stdout_lines
+          - log_folder_value.stdout_lines
