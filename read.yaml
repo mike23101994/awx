@@ -1,0 +1,17 @@
+---
+- name: Check LogFolder Value
+  hosts: your_windows_host
+  gather_facts: no
+  tasks:
+    - name: Read Configuration File
+      win_shell: |
+        [xml]$config = Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
+        $logFolder = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
+        if ($logFolder -ne $null) {
+          Write-Host "LogFolder Value: $($logFolder.value)"
+        } else {
+          Write-Host "LogFolder Not Found in Configuration"
+        }
+      register: result
+    - debug:
+        var: result.stdout_lines
