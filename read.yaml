@@ -8,7 +8,8 @@
         [xml]$config = Get-Content "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
         $logFolder = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
         if ($logFolder -ne $null) {
-          Write-Host "LogFolder Value: $($logFolder.value)"
+          $logFolderValue = $logFolder.value -replace '\\\\', '\\'
+          Write-Host "LogFolder Value: $logFolderValue"
         } else {
           Write-Host "LogFolder Not Found in Configuration"
         }
