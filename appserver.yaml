@@ -1,7 +1,7 @@
-- name: Get Service Status
+---
+- name: Manage Application Server
   hosts: all
   gather_facts: no
-
   tasks:
     - name: Check Service Status
       win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Every Angle Application Server" } | Select-Object DisplayName, Status
@@ -27,3 +27,56 @@
       register: result
     - debug:
         var: result.stdout_lines
+
+    - name: Stop Service from Services.msc
+      win_service:
+        name: Every Angle Application Server
+        state: stopped
+      register: stop_service_result
+
+    - name: Check if Service is Running
+      win_shell: Get-Service -Name "Every Angle Application Server" | Select-Object -ExpandProperty Status
+      register: service_status_before
+
+    - name: Move Log File
+      win_shell: |
+        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.txt"
+        $newLogFolderPath = "F:\Data\AppServer\log\logging"
+        if (-not (Test-Path $newLogFolderPath -PathType Container)) {
+          New-Item -Path $newLogFolderPath -ItemType Directory
+        }
+        Move-Item -Path $logFilePath -Destination $newLogFolderPath
+      register: move_log_result
+
+    - name: Update LogFolder
+      win_shell: |
+        $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
+        $newLogFolderPath = "F:\Data\AppServer\log\logging"
+        [xml]$config = Get-Content $configFile
+        $logFolderNode = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
+        if ($logFolderNode -ne $null) {
+          $logFolderNode.value = $newLogFolderPath
+          $config.Save($configFile)
+        }
+      register: update_log_folder_result
+
+    - name: Start Service
+      win_service:
+        name: YourServiceName
+        state: started
+      register: start_service_result
+
+    - name: Check Service Status
+      win_shell: Get-Service -Name "YourServiceName" | Select-Object -ExpandProperty Status
+      register: service_status_after
+
+    - name: Print Service Status Before
+      debug:
+        var: service_status_before.stdout
+
+    - name: Print Service Status After
+      debug:
+        var: service_status_after.stdout
+
+
+    
