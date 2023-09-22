@@ -14,7 +14,7 @@
 
     - name: Extract LogFolder Value
       set_fact:
-        log_folder_value: "{{ config_content.stdout | regex_find('<add key=\"LogFolder\" value=\"(.+?)\" />') }}"
+        log_folder_value: "{{ config_content.stdout | regex_search('<add key=\"LogFolder\" value=\"(.+?)\" />').match(1) }}"
       ignore_errors: yes  # Ignore errors if the key is not found
 
     - name: Print Service Status and LogFolder
