@@ -1,0 +1,18 @@
+---
+- name: Send Logs to Datadog
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Send log to Datadog
+      uri:
+        url: "https://http-intake.logs.datadoghq.com/v1/input/9bb0fb16-2e71-4ce6-b6aa-43038d34fa13"
+        method: POST
+        body: "{'ddsource': 'ansible', 'message': 'This is a test log message'}"
+        status_code: 200
+        headers:
+          Content-Type: "application/json"
+      register: datadog_response
+
+    - name: Display Datadog API response
+      debug:
+        var: datadog_response
