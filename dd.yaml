@@ -1,28 +1,36 @@
 ---
-- name: Install Ansible Galaxy Collections and Send Logs to Datadog
-  hosts: all  # Replace with the name of your Windows EC2 group or host(s)
+- name: Install Python and Use Ansible Galaxy Task
+  hosts: your_windows_ec2_group  # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
   tasks:
-    - name: Find Full Path to ansible-galaxy
-      ansible.windows.win_command: where ansible-galaxy
-      register: galaxy_command_path
+    - name: Download Python Installer
+      ansible.builtin.win_get_url:
+        url: https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe  # Replace with the URL of the Python installer you want to use
+        dest: C:\Python\python-3.9.7-amd64.exe  # Specify the destination where you want to save the installer
+      register: download_result
 
-    - name: Display ansible-galaxy Path
+    - name: Install Python
+      ansible.windows.win_command: 'C:\Python\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
+      when: download_result.failed == false
+      ignore_errors: yes
+      register: python_install_output
+
+    - name: Display Python Installation Output
       debug:
-        var: galaxy_command_path.stdout_lines
+        var: python_install_output.stdout_lines
 
     - name: Install Ansible Galaxy Collections
-      ansible.windows.win_command: "{{ galaxy_command_path.stdout_lines[0] }} collection install community.general"
+      ansible.windows.win_command: 'C:\Python\python-3.9.7-amd64.exe -m ansible.builtin.command -a "ansible-galaxy collection install community.general"'
+      when: python_install_output.failed == false
       register: galaxy_install_output
 
     - name: Display Ansible Galaxy Installation Output
       debug:
         var: galaxy_install_output.stdout_lines
 
-    - name: Send Logs to Datadog
-      ansible.windows.win_command: |
-        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Host 'Sending logs to Datadog'"
+    # Add your Datadog API task or any other tasks here
 
-    - name: Display Datadog API Output
-      debug:
-        msg: "Replace this with the task to send logs to Datadog using the API"
+    # Cleanup the Python installer (optional)
+    - name: Remove Python Installer
+      ansible.windows.win_shell: Remove-Item -Path "C:\Python\python-3.9.7-amd64.exe" -Force
+      when: download_result.failed == false and python_install_output.failed == false
