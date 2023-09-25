@@ -1,28 +1,21 @@
 ---
-- name: Retrieve and Transfer Logs from AWX to Server
-  hosts: localhost
+- name: Install Ansible Galaxy Collections and Send Logs to Datadog
+  hosts: all # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
-  vars:
-    # Replace these with your AWX API credentials and server information
-    awx_base_url: "http://awx.iswcloudapp.com/"
-    awx_username: "admin"
-    awx_password: "M@inak@2310"
-    job_id: "152-test-temp"
-    server_ip: "172.31.24.128"
-    server_user: "Administrator"
-    server_destination: "/home/ec2-user/awx-log"
-
   tasks:
-    - name: Fetch AWX job log
-      uri:
-        url: "{{ awx_base_url }}/api/v2/jobs/{{ job_id }}/stdout/?format=txt"
-        user: "{{ awx_username }}"
-        password: "{{ awx_password }}"
-      register: job_log
+    - name: Install Ansible Galaxy Collections
+      ansible.windows.win_command: |
+        ansible-galaxy collection install community.general
+      register: galaxy_install_output
 
-    - name: Transfer log to the server
-      ansible.builtin.copy:
-        src: "{{ job_log.content }}"
-        dest: "{{ server_destination }}/awx_job_log.txt"
-        remote_src: yes
-      delegate_to: localhost
+    - name: Display Ansible Galaxy Installation Output
+      debug:
+        var: galaxy_install_output.stdout_lines
+
+    - name: Send Logs to Datadog
+      ansible.windows.win_command: |
+        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Host 'Sending logs to Datadog'"
+
+    - name: Display Datadog API Output
+      debug:
+        msg: "Replace this with the task to send logs to Datadog using the API"

@@ -1,3 +1,0 @@
-datadog
-pyyaml>=3.10
-packaging
