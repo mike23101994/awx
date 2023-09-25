@@ -1,11 +1,18 @@
 ---
 - name: Install Ansible Galaxy Collections and Send Logs to Datadog
-  hosts: all # Replace with the name of your Windows EC2 group or host(s)
+  hosts: all  # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
   tasks:
+    - name: Find Full Path to ansible-galaxy
+      ansible.windows.win_command: where ansible-galaxy
+      register: galaxy_command_path
+
+    - name: Display ansible-galaxy Path
+      debug:
+        var: galaxy_command_path.stdout_lines
+
     - name: Install Ansible Galaxy Collections
-      ansible.windows.win_command: |
-        ansible-galaxy collection install community.general
+      ansible.windows.win_command: "{{ galaxy_command_path.stdout_lines[0] }} collection install community.general"
       register: galaxy_install_output
 
     - name: Display Ansible Galaxy Installation Output
