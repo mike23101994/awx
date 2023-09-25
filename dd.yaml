@@ -12,12 +12,12 @@
     - name: Check if Python is Installed
       ansible.windows.win_command: 'where python'
       register: python_check_result
-      ignore_errors: yes  # Ignore errors if 'where python' command fails
+      ignore_errors: no  # Ignore errors if 'where python' command fails
 
     - name: Install Python if not installed
       ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
-      when: python_check_result.rc != 0  # Only run if Python is not installed
-      ignore_errors: yes
+      when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
+      ignore_errors: no
       register: python_install_output
 
     - name: Display Python Installation Output
@@ -27,12 +27,12 @@
     - name: Check if Ansible is Installed
       ansible.windows.win_command: 'where ansible'
       register: ansible_check_result
-      ignore_errors: yes  # Ignore errors if 'where ansible' command fails
+      ignore_errors: no  # Ignore errors if 'where ansible' command fails
 
     - name: Install Ansible if not installed
       ansible.windows.win_command: 'C:\Program Files\Python39\Scripts\pip.exe install ansible'
-      when: ansible_check_result.rc != 0  # Only run if Ansible is not installed
-      ignore_errors: yes
+      when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"
+      ignore_errors: no
       register: ansible_install_output
 
     - name: Display Ansible Installation Output
@@ -43,11 +43,11 @@
       ansible.windows.win_environment:
         name: PATH
         value: '{{ ansible_env.PATH }};C:\Program Files\Python39\Scripts'
-      when: ansible_check_result.rc == 0  # Only run if Ansible is installed
+      when: ansible_install_output.rc == 0  # Only run if Ansible is installed
 
     - name: Install Ansible Galaxy Collections
       ansible.windows.win_shell: ansible-galaxy collection install community.general
-      when: ansible_check_result.rc == 0  # Only run if Ansible is installed
+      when: ansible_install_output.rc == 0  # Only run if Ansible is installed
       register: galaxy_install_output
 
     - name: Display Ansible Galaxy Installation Output
