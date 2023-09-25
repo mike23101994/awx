@@ -33,7 +33,7 @@
       ignore_errors: yes  # Ignore errors if 'where ansible' command fails
 
     - name: Install Ansible if not installed
-      ansible.windows.win_command: 'C:\Program Files\Python39\Scripts\pip3.9.exe install ansible'
+      ansible.windows.win_command: ''C:\Program Files\Python39\python.exe -m pip install ansible''
       when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"
       ignore_errors: no
       register: ansible_install_output
