@@ -42,8 +42,8 @@
 
     - name: Move Log File
       win_shell: |
-        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.log"
-        $newLogFolderPath = "F:\Data\AppServer\log2"
+        $logFilePath = "F:\Data\AppServer\log\log2\AppServerInstall.log"
+        $newLogFolderPath = "F:\Data\AppServer\log"
         if (-not (Test-Path $logFilePath -PathType Leaf)) {
           Write-Host "Log file does not exist in the source location."
         } else {
@@ -60,7 +60,7 @@
     - name: Update LogFolder
       win_shell: |
         $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
-        $newLogFolderPath = "F:\Data\AppServer\log\log2"
+        $newLogFolderPath = "F:\Data\AppServer\log"
         [xml]$config = Get-Content $configFile
         $logFolderNode = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
         if ($logFolderNode -ne $null) {
