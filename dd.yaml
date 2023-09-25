@@ -1,6 +1,6 @@
 ---
 - name: Install Python and Use Ansible Galaxy Task
-  hosts: your_windows_ec2_group  # Replace with the name of your Windows EC2 group or host(s)
+  hosts: all  # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
   tasks:
     - name: Download Python Installer
