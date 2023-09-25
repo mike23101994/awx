@@ -17,13 +17,13 @@
       register: python_check_result
       ignore_errors: no  # Ignore errors if 'where python' command fails
 
-    - name: Install Ansible if not installed
-      ansible.windows.win_command: 'C:\Program Files\Python39\python.exe -m pip install ansible'
+    - name: Install Python if not installed
+      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
       environment:
         PATH: "{{ ansible_env.PATH }};C:\Program Files\Python39"
-      when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"
+      when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
       ignore_errors: no
-      register: ansible_install_output
+      register: python_install_output
 
     - name: Display Python Installation Output
       debug:
