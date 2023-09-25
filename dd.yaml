@@ -24,12 +24,6 @@
       debug:
         var: python_install_output.stdout_lines
 
-    - name: Set PATH to include Ansible
-      ansible.windows.win_environment:
-        name: PATH
-        value: '{{ ansible_env.PATH }};C:\Program Files\Python39\Scripts'
-      when: python_install_output.failed == false and python_check_result.rc == 0
-
     - name: Check if Ansible is Installed
       ansible.windows.win_command: 'where ansible'
       register: ansible_check_result
@@ -44,6 +38,12 @@
     - name: Display Ansible Installation Output
       debug:
         var: ansible_install_output.stdout_lines
+
+    - name: Set PATH to include Ansible
+      ansible.windows.win_environment:
+        name: PATH
+        value: '{{ ansible_env.PATH }};C:\Program Files\Python39\Scripts'
+      when: ansible_check_result.rc == 0  # Only run if Ansible is installed
 
     - name: Install Ansible Galaxy Collections
       ansible.windows.win_shell: ansible-galaxy collection install community.general
