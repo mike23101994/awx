@@ -5,6 +5,9 @@ import getpass
 import logging
 import os
 import time
+import sys
+sys.path.append('/shared_packages/datadog')
+
 
 IMPORT_ERROR = None
 try:
