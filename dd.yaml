@@ -3,14 +3,19 @@
   hosts: all  # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
   tasks:
+    - name: Create Destination Folder for Python Installer
+      ansible.builtin.win_file:
+        path: C:\Temp
+        state: directory
+
     - name: Download Python Installer
       ansible.builtin.win_get_url:
-        url: https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe  # Replace with the URL of the Python installer you want to use
-        dest: C:\Python\python-3.9.7-amd64.exe  # Specify the destination where you want to save the installer
+        url: https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe
+        dest: C:\Temp\python-3.9.7-amd64.exe
       register: download_result
 
     - name: Install Python
-      ansible.windows.win_command: 'C:\Python\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
+      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'  # Corrected the installer filename
       when: download_result.failed == false
       ignore_errors: yes
       register: python_install_output
@@ -20,7 +25,7 @@
         var: python_install_output.stdout_lines
 
     - name: Install Ansible Galaxy Collections
-      ansible.windows.win_command: 'C:\Python\python-3.9.7-amd64.exe -m ansible.builtin.command -a "ansible-galaxy collection install community.general"'
+      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe -m ansible.builtin.command -a "ansible-galaxy collection install community.general"'
       when: python_install_output.failed == false
       register: galaxy_install_output
 
@@ -32,5 +37,5 @@
 
     # Cleanup the Python installer (optional)
     - name: Remove Python Installer
-      ansible.windows.win_shell: Remove-Item -Path "C:\Python\python-3.9.7-amd64.exe" -Force
+      ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.9.7-amd64.exe" -Force
       when: download_result.failed == false and python_install_output.failed == false
