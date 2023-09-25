@@ -1,6 +1,6 @@
 ---
 - name: Send Logs to Datadog
-  hosts: localhost
+  hosts: all
   gather_facts: false
   tasks:
     - name: Send log to Datadog
