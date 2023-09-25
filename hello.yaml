@@ -1,8 +1,20 @@
----
-- name: Run Hello World on Windows
-  hosts: 172.31.31.18  # Replace with the actual hostname or group name of your Windows host in the inventory
-  gather_facts: no       # Disable facts gathering for Windows hosts
-
+- name: PowerShell Getting Started First Playbook
+  hosts: all
+  gather_facts: false
   tasks:
-    - name: Execute Hello World
-      win_command: echo "Hello, World!" > C:\hello.txt
+     - name: Run Python script using system-wide Python interpreter
+      ansible.builtin.script: /var/lib/awx/projects/_11__test_proj/callback_plugins/datadog_callback.py
+      register: python_script_output
+      args:
+        executable: /usr/bin/python3  # Specify the system-wide Python interpreter path
+    - name: Run basic PowerShell script
+      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Output 'Hello World'"
+      register: powershell_output
+
+    - name: Display PowerShell output
+      debug:
+        var: powershell_output.stdout_lines
+        
+    - name: Display Python script output
+      debug:
+        var: python_script_output.stdout_lines
