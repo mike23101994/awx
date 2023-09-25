@@ -27,7 +27,7 @@
     - name: Check if Ansible is Installed
       ansible.windows.win_command: 'where ansible'
       register: ansible_check_result
-      ignore_errors: no  # Ignore errors if 'where ansible' command fails
+      ignore_errors: yes  # Ignore errors if 'where ansible' command fails
 
     - name: Install Ansible if not installed
       ansible.windows.win_command: 'C:\Program Files\Python39\Scripts\pip.exe install ansible'
