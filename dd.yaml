@@ -7,7 +7,7 @@
     awx_base_url: "http://awx.iswcloudapp.com/"
     awx_username: "admin"
     awx_password: "M@inak@2310"
-    job_id: "your-job-id"
+    job_id: "152-test-temp"
     server_ip: "172.31.24.128"
     server_user: "Administrator"
     server_destination: "/home/ec2-user/awx-log"
@@ -21,6 +21,8 @@
       register: job_log
 
     - name: Transfer log to the server
-      ansible.builtin.scp:
+      ansible.builtin.copy:
         src: "{{ job_log.content }}"
-        dest: "{{ server_user }}@{{ server_ip }}:{{ server_destination }}awx_job_log.txt"
+        dest: "{{ server_destination }}/awx_job_log.txt"
+        remote_src: yes
+      delegate_to: localhost
