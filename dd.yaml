@@ -1,22 +1,22 @@
 ---
-- name: Install Python and Use Ansible Galaxy Task
-  hosts: all  # Replace with the name of your Windows EC2 group or host(s)
+- name: Check Python Installation and Use Ansible Galaxy Task
+  hosts: all    # Replace with the name of your Windows EC2 group or host(s)
   gather_facts: false
   tasks:
     - name: Create Destination Folder for Python Installer
-      ansible.builtin.win_file:
+      ansible.windows.win_file:
         path: C:\Temp
         state: directory
+      ignore_errors: yes  # Ignore errors if the directory already exists
 
-    - name: Download Python Installer
-      ansible.builtin.win_get_url:
-        url: https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe
-        dest: C:\Temp\python-3.9.7-amd64.exe
-      register: download_result
+    - name: Check if Python is Installed
+      ansible.windows.win_command: 'where python'
+      register: python_check_result
+      ignore_errors: yes  # Ignore errors if 'where python' command fails
 
-    - name: Install Python
-      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'  # Corrected the installer filename
-      when: download_result.failed == false
+    - name: Install Python if not installed
+      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
+      when: python_check_result.rc != 0  # Only run if Python is not installed
       ignore_errors: yes
       register: python_install_output
 
@@ -25,8 +25,8 @@
         var: python_install_output.stdout_lines
 
     - name: Install Ansible Galaxy Collections
-      ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe -m ansible.builtin.command -a "ansible-galaxy collection install community.general"'
-      when: python_install_output.failed == false
+      ansible.windows.win_command: 'C:\Program Files\Python39\python.exe -m ansible.builtin.command -a "ansible-galaxy collection install community.general"'
+      when: python_check_result.rc == 0  # Only run if Python is installed
       register: galaxy_install_output
 
     - name: Display Ansible Galaxy Installation Output
@@ -38,4 +38,4 @@
     # Cleanup the Python installer (optional)
     - name: Remove Python Installer
       ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.9.7-amd64.exe" -Force
-      when: download_result.failed == false and python_install_output.failed == false
+      when: python_install_output.failed == false and python_check_result.rc != 0  # Only remove if Python was installed
