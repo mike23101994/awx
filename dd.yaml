@@ -1,18 +1,26 @@
 ---
-- name: Send Logs to Datadog
-  hosts: all
+- name: Retrieve and Transfer Logs from AWX to Server
+  hosts: localhost
   gather_facts: false
-  tasks:
-    - name: Send log to Datadog
-      uri:
-        url: "https://http-intake.logs.datadoghq.com/v1/input/9bb0fb16-2e71-4ce6-b6aa-43038d34fa13"
-        method: POST
-        body: "{'ddsource': 'ansible', 'message': 'This is a test log message'}"
-        status_code: 200
-        headers:
-          Content-Type: "application/json"
-      register: datadog_response
+  vars:
+    # Replace these with your AWX API credentials and server information
+    awx_base_url: "http://awx.iswcloudapp.com/"
+    awx_username: "admin"
+    awx_password: "M@inak@2310"
+    job_id: "your-job-id"
+    server_ip: "172.31.24.128"
+    server_user: "Administrator"
+    server_destination: "/home/ec2-user/awx-log"
 
-    - name: Display Datadog API response
-      debug:
-        var: datadog_response
+  tasks:
+    - name: Fetch AWX job log
+      uri:
+        url: "{{ awx_base_url }}/api/v2/jobs/{{ job_id }}/stdout/?format=txt"
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+      register: job_log
+
+    - name: Transfer log to the server
+      ansible.builtin.scp:
+        src: "{{ job_log.content }}"
+        dest: "{{ server_user }}@{{ server_ip }}:{{ server_destination }}awx_job_log.txt"
