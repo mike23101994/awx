@@ -1,6 +1,6 @@
 ---
 - name: Check Python and Ansible Installation and Use Ansible Galaxy Task
-  hosts: test-server 
+  hosts: all 
   become: yes
   become_method: runas
   become_user: Administrator 
@@ -25,7 +25,7 @@
         Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
       when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
       environment:
-        PATH: "'C:\Program Files\Python38'"
+        PATH: "C:\Program Files\Python38"
       ignore_errors: no
       register: python_install_output
 
