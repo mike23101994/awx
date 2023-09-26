@@ -1,9 +1,6 @@
 ---
 - name: Check Python and Ansible Installation and Use Ansible Galaxy Task
   hosts: all    # Replace with the name of your Windows EC2 group or host(s)
-  become: yes
-  become_method: runas
-  become_user: Administrator
   gather_facts: false
   tasks:
     - name: Create Destination Folder for Python Installer
