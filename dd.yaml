@@ -15,14 +15,16 @@
       ignore_errors: yes  # Ignore errors if 'where python' command fails
 
     - name: Install Python if not installed
-      ansible.windows.win_command: 'Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe -OutFile C:\Temp\python-3.9.7-amd64.exe; C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
+      ansible.windows.win_shell: |
+        $url = "https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe"
+        $outputFile = "C:\Temp\python-3.9.7-amd64.exe"
+        Invoke-WebRequest -Uri $url -OutFile $outputFile
+        Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
       environment:
         PATH: "C:\Program Files\Python39"
-      when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
       ignore_errors: no
       register: python_install_output
-
-
+      
     - name: Display Python Installation Output
       debug:
         var: python_install_output.stdout_lines
