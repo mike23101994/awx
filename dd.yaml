@@ -15,7 +15,7 @@
     - name: Check if Python is Installed
       ansible.windows.win_command: 'where python'
       register: python_check_result
-      ignore_errors: no  # Ignore errors if 'where python' command fails
+      ignore_errors: yes  # Ignore errors if 'where python' command fails
 
     - name: Install Python if not installed
       ansible.windows.win_command: 'C:\Temp\python-3.9.7-amd64.exe /quiet InstallAllUsers=1 PrependPath=1'
