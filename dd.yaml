@@ -51,7 +51,7 @@
       ansible.windows.win_path:
         elements:
         - 'C:\Program Files\Python39\Scripts;'
-      when: ansible_install_output.rc == 0  # Only run if Ansible is installed
+      when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"  # Only run if Ansible is installed
 
 
     - name: Install Ansible Galaxy Collections
