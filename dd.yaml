@@ -39,7 +39,7 @@
       ignore_errors: no
 
     - name: Install Ansible if not installed
-      ansible.windows.win_command: Start-Process -Wait -FilePath "C:\Program Files\Python39\Scripts\pip.exe" -ArgumentList "install ansible"
+      ansible.windows.win_command: .\pip.exe install ansible
       when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"
       ignore_errors: no
       register: ansible_install_output
