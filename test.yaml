@@ -1,18 +1,22 @@
-- name: Assume IAM Role in Account B
-  hosts: localhost
-  gather_facts: no
+- name: Check Python and Ansible Installation and Use Ansible Galaxy Task
+  hosts: all    # Replace with the name of your Windows EC2 group or host(s)
+  become: yes
+  become_method: runas
+  become_user: Administrator
+  gather_facts: false
   tasks:
-    - name: Assume Role
-      shell: |
-        aws sts assume-role \
-          --role-arn "arn:aws:iam::873579038761:role/Trusted-Role" \
-          --role-session-name "SessionName"
-      register: assumed_role
+    - name: Display Message Before Creating Destination Folder
+      debug:
+        msg: "Creating the destination folder for Python Installer."
 
-    - name: Set AWS Environment Variables
-      set_fact:
-        AWS_ACCESS_KEY_ID: "{{ assumed_role.sts.Credentials.AccessKeyId }}"
-        AWS_SECRET_ACCESS_KEY: "{{ assumed_role.sts.Credentials.SecretAccessKey }}"
-        AWS_SESSION_TOKEN: "{{ assumed_role.sts.Credentials.SessionToken }}"
+    - name: Create Destination Folder for Python Installer
+      ansible.windows.win_file:
+        path: C:\Temp
+        state: directory
+      ignore_errors: yes
+
+    - name: Display Message After Creating Destination Folder
+      debug:
+        msg: "Destination folder for Python Installer has been created."
 
     # Add tasks here to perform actions in Account B using the temporary credentials.
