@@ -35,7 +35,7 @@
       ignore_errors: yes  # Ignore errors if 'where ansible' command fails
 
     - name: Navigate to Python Scripts directory
-      ansible.windows.win_command: cd "C:\Program Files\Python39\Scripts"
+      ansible.windows.win_command: cd '"C:\Program Files\Python39\Scripts"'
       ignore_errors: no
 
     - name: Install Ansible if not installed
