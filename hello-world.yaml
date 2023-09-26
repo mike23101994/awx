@@ -7,6 +7,14 @@
       ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Output 'Hello World'"
       register: powershell_output
 
-    - name: Display PowerShell output
-      debug:
-        var: powershell_output.stdout_lines
+    - name: Create Destination Folder for Python Installer
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
+
+    - name: Store PowerShell output in a file
+      copy:
+        content: "{{ powershell_output.stdout_lines | join('\n') }}"
+        dest: C:\Ansible-Logs\output.txt
+      become: yes  # This allows running the task with elevated privileges
