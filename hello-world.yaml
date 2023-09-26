@@ -17,4 +17,3 @@
       copy:
         content: "{{ powershell_output.stdout_lines | join('\n') }}"
         dest: C:\Ansible-Logs\output.txt
-      become: yes  # This allows running the task with elevated privileges
