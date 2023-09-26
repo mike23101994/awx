@@ -35,13 +35,11 @@
       ignore_errors: yes  # Ignore errors if 'where ansible' command fails
 
     - name: Install Ansible if not installed
-      win_command: choco install ansible -y
-      when: "'INFO: Could not find files for the given pattern(s).' in ansible_install_output.stderr_lines"
-      args:
-        creates: "C:\\Program Files (x86)\\Ansible"
-      register: ansible_install_result
-      ignore_errors: yes 
-      
+      ansible.windows.win_command: 'C:\Program Files\Python39\Scripts\pip install ansible'
+      when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"
+      ignore_errors: no
+      register: ansible_install_output
+
     - name: Display Ansible Installation Output
       debug:
         var: ansible_install_output.stdout_lines
