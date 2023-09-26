@@ -19,8 +19,8 @@
 
     - name: Install Python if not installed
       ansible.windows.win_shell: |
-        $url = "https://www.python.org/ftp/python/3.8.10/python-3.8.10.exe"
-        $outputFile = "C:\Temp\python-3.8.10.exe"
+        $url = "https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe"
+        $outputFile = "C:\Temp\python-3.8.10-amd64.exe"
         Invoke-WebRequest -Uri $url -OutFile $outputFile
         Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
       when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
