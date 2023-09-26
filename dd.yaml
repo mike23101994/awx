@@ -50,6 +50,7 @@
       ansible.windows.win_environment:
         name: PATH
         value: 'C:\Program Files\Python39\Scripts;'
+        level: machine
       when: ansible_install_output.rc == 0  # Only run if Ansible is installed
 
 
