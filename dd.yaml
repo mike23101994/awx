@@ -24,7 +24,7 @@
         PATH: "C:\Program Files\Python39"
       ignore_errors: no
       register: python_install_output
-      
+
     - name: Display Python Installation Output
       debug:
         var: python_install_output.stdout_lines
@@ -54,8 +54,10 @@
 
 
     - name: Install Ansible Galaxy Collections
-      ansible.windows.win_shell: ansible-galaxy collection install community.general
-      when: ansible_install_output.rc == 0  # Only run if Ansible is installed
+      ansible.windows.win_shell: |
+        $env:PATH = "C:\Program Files\Python39;$env:PATH"
+        ansible-galaxy collection install community.general
+      when: ansible_install_output.rc == 0  # Only run if Ansible is installed successfully
       register: galaxy_install_output
 
     - name: Display Ansible Galaxy Installation Output
