@@ -20,6 +20,7 @@
         $outputFile = "C:\Temp\python-3.9.7-amd64.exe"
         Invoke-WebRequest -Uri $url -OutFile $outputFile
         Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
+      when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
       environment:
         PATH: "C:\Program Files\Python39"
       ignore_errors: no
