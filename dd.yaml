@@ -1,6 +1,9 @@
 ---
 - name: Check Python and Ansible Installation and Use Ansible Galaxy Task
-  hosts: all    # Replace with the name of your Windows EC2 group or host(s)
+  hosts: test-server 
+  become: yes
+  become_method: runas
+  become_user: Administrator 
   gather_facts: false
   tasks:
     - name: Create Destination Folder for Python Installer
@@ -22,7 +25,7 @@
         Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
       when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
       environment:
-        PATH: "C:\Program Files\Python38"
+        PATH: "'C:\Program Files\Python38'"
       ignore_errors: no
       register: python_install_output
 
