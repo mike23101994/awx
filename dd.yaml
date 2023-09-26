@@ -54,16 +54,9 @@
       when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"  # Only run if Ansible is installed
 
 
-    - name: Install Ansible Galaxy Collections
-      ansible.windows.win_shell: |
-        $env:PATH = "C:\Program Files\Python39;$env:PATH"
-        ansible-galaxy collection install community.general
-      when: ansible_check_result.rc == 0  # Only run if Ansible is installed successfully
-      register: galaxy_install_output
-
-    - name: Display Ansible Galaxy Installation Output
-      debug:
-        var: galaxy_install_output.stdout_lines
+    - name: Execute a command on the Windows system
+      community.general.win_shell:
+        command: echo "Hello, world!"
 
     # Add your Datadog API task or any other tasks here
 
