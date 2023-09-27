@@ -39,7 +39,7 @@
     - name: Move Log File
       win_shell: |
         $logFilePath = "F:\Data\AppServer\log\log-test\AppServerInstall.log"
-        $newLogFolderPath = "F:\Data\AppServer\log\"
+        $newLogFolderPath = "F:\Data\AppServer\log"
         if (-not (Test-Path $logFilePath -PathType Leaf)) {
           Write-Host "Log file does not exist in the source location."
         } else {
