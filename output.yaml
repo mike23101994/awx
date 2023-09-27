@@ -13,9 +13,21 @@
         state: directory
       ignore_errors: yes 
 
+    # Add more tasks as needed
+
+    # ...
+
     - name: Store PowerShell output in a file
       copy:
         content: "{{ powershell_output.stdout_lines | join('\n') }}"
         dest: "C:\Ansible-Logs\output_{{ ansible_run_id }}.txt"
         remote_src: yes
         append: yes
+
+# Append the output of all tasks to the same file
+- name: Append Output of All Tasks
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Concatenate All Outputs
+      ansible.builtin.shell: "cat C:/Ansible-Logs/output_* > C:/Ansible-Logs/output_all.txt"

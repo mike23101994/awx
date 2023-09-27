@@ -1,77 +1,40 @@
 ---
-- name: Run PowerShell Script and Provide Site URL
+- name: PowerShell Getting Started First Playbook
   hosts: all
-  gather_facts: no
-
+  gather_facts: false
   tasks:
-    - name: Install Chocolatey on Windows Hosts
-      win_chocolatey:
-        name: chocolatey
-        state: present
-      become: yes
+    - name: Run basic PowerShell script
+      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Write-Output 'Hello World'"
+      register: powershell_output
 
-    - name: Install Python on Windows Hosts
-      win_chocolatey:
-        name: python
-        state: present
-      become: yes
+    - name: Create Destination Folder for Python Installer
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
 
+    - name: Store PowerShell output in a file
+      copy:
+        content: "{{ powershell_output.stdout_lines | join('\n') }}"
+        dest: "C:\Ansible-Logs\output_{{ ansible_run_id }}.txt"
+        remote_src: yes
+        append: yes
 
-    - name: Install AWS CLI on Windows Hosts
-      win_chocolatey:
-        name: awscli
-        state: present
-      become: yes
-
-
-    - name: Reboot Windows Hosts (if AWS CLI was installed)
-      win_reboot:
-      become: yes
-      when: "'Windows' in ansible_system and 'awscli' in ansible_choco.installed"
-
-    - name: Wait for hosts to become available after reboot
-      wait_for_connection:
-        delay: 60
-        timeout: 300
-      become: yes
-      when: "'awscli' in ansible_choco.installed"
-
-    - name: Execute PowerShell Script
-      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/Users/Administrator/test.ps1
-      register: ps_script_output
-
-    - name: Capture ALB DNS Name
-      command: aws elbv2 describe-load-balancers --names YourALBName --query 'LoadBalancers[0].DNSName' --output text
-      register: alb_dns_name
-      ignore_errors: yes  # Ignore errors if the ALB name is not found
-
-    - name: Serve Output
-      script: |
-        #!/usr/bin/env python
-        from http.server import BaseHTTPRequestHandler, HTTPServer
-        import json
-
-        class RequestHandler(BaseHTTPRequestHandler):
+    - name: Run Python HTTP Server
+      win_shell: |
+        python -c "import http.server, socketserver
+        class CustomHandler(http.server.SimpleHTTPRequestHandler):
             def do_GET(self):
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                output = json.dumps(ps_script_output.stdout_lines, indent=4)
-                alb_dns = "{{ alb_dns_name.stdout }}"
-                site_url = f"Access the site at: http://{alb_dns}/"
-                self.wfile.write(site_url.encode("utf-8"))
-
-        def run(server_class=HTTPServer, handler_class=RequestHandler, port=8080):
-            server_address = ("", port)
-            httpd = server_class(server_address, handler_class)
-            print(f"Serving on port {port}")
-            httpd.serve_forever()
-
-        if __name__ == "__main__":
-            run()
-
-    - name: Display Site URL
-      debug:
-        var: site_url
-      vars:
-        site_url: "Access the site at: http://{{ alb_dns_name.stdout }}/"
+                if self.path == '/':
+                    with open('C:/Ansible-Logs/output.txt', 'r') as file:
+                        output_content = file.read()
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(output_content.encode('utf-8'))
+                else:
+                    super().do_GET()
+        port = 8080
+        with socketserver.TCPServer(('', port), CustomHandler) as httpd:
+            httpd.serve_forever()"
+      async: true
