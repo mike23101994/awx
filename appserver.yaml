@@ -38,8 +38,8 @@
 
     - name: Move Log File
       win_shell: |
-        $logFilePath = "F:\Data\AppServer\log\log-test\AppServerInstall.log"
-        $newLogFolderPath = "F:\Data\AppServer\log"
+        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.log"
+        $newLogFolderPath = "F:\Data\AppServer\log\log-test"
         if (-not (Test-Path $logFilePath -PathType Leaf)) {
           Write-Host "Log file does not exist in the source location."
         } else {
@@ -55,7 +55,7 @@
     - name: Update LogFolder
       win_shell: |
         $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
-        $newLogFolderPath = "F:\Data\AppServer\log"
+        $newLogFolderPath = "F:\Data\AppServer\log\log-test"
         [xml]$config = Get-Content $configFile
         $logFolderNode = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
         if ($logFolderNode -ne $null) {
@@ -123,7 +123,7 @@
     - name: Store Task Outputs in output.txt
       copy:
         content: "{{ task_outputs | join('\n') }}"
-        dest: "C:/Ansible-Logs/output_{{ ansible_run_id }}.txt"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
         remote_src: yes
     
 
