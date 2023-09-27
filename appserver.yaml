@@ -6,6 +6,7 @@
     - name: Check Service Status
       win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Every Angle Application Server" } | Select-Object DisplayName, Status
       register: service_status
+      failed_when: false
 
     - name: Read Configuration File
       win_shell: |
@@ -21,21 +22,24 @@
           Write-Host "LogFolder Not Found in Configuration"
         }
       register: result
+      failed_when: false
 
     - name: Stop Service from Services.msc
       win_service:
         name: Every Angle Application Server
         state: stopped
       register: stop_service_result
+      failed_when: false
 
     - name: Check if Service is Running
       win_shell: Get-Service -Name "Every Angle Application Server" | Select-Object -ExpandProperty Status
       register: service_status_before
+      failed_when: false
 
     - name: Move Log File
       win_shell: |
-        $logFilePath = "F:\Data\AppServer\log\log-test\AppServerInstall.log"
-        $newLogFolderPath = "F:\Data\AppServer\log"
+        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.log"
+        $newLogFolderPath = "F:\Data\AppServer\log\log-test"
         if (-not (Test-Path $logFilePath -PathType Leaf)) {
           Write-Host "Log file does not exist in the source location."
         } else {
@@ -46,11 +50,12 @@
         }
       register: move_log_result
       ignore_errors: yes
+      failed_when: false
 
     - name: Update LogFolder
       win_shell: |
         $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
-        $newLogFolderPath = "F:\Data\AppServer\log"
+        $newLogFolderPath = "F:\Data\AppServer\log\og-test"
         [xml]$config = Get-Content $configFile
         $logFolderNode = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
         if ($logFolderNode -ne $null) {
@@ -59,6 +64,7 @@
         }
       register: update_log_folder_result
       ignore_errors: yes
+      failed_when: false
 
     - name: Read changed Log File Location
       win_shell: |
@@ -75,16 +81,19 @@
         }
       register: new_result
       ignore_errors: yes
+      failed_when: false
 
     - name: Start Service
       win_service:
         name: Every Angle Application Server
         state: started
       register: start_service_result
+      failed_when: false
 
     - name: Check Service Status
       win_shell: Get-Service -Name "Every Angle Application Server" | Select-Object -ExpandProperty Status
       register: service_status_after
+      failed_when: false
 
 
     - name: Capture Task Outputs
