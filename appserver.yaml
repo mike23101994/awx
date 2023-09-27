@@ -38,8 +38,8 @@
 
     - name: Move Log File
       win_shell: |
-        $logFilePath = "F:\Data\AppServer\log\AppServerInstall.log"
-        $newLogFolderPath = "F:\Data\AppServer\log\log-test"
+        $logFilePath = "F:\Data\AppServer\log\log-test\AppServerInstall.log"
+        $newLogFolderPath = "F:\Data\AppServer\log\"
         if (-not (Test-Path $logFilePath -PathType Leaf)) {
           Write-Host "Log file does not exist in the source location."
         } else {
@@ -55,7 +55,7 @@
     - name: Update LogFolder
       win_shell: |
         $configFile = "F:\Apps\AppServer\EveryAngle.Edgar.Service.exe.config"
-        $newLogFolderPath = "F:\Data\AppServer\log\og-test"
+        $newLogFolderPath = "F:\Data\AppServer\log"
         [xml]$config = Get-Content $configFile
         $logFolderNode = $config.configuration.appSettings.add | Where-Object { $_.key -eq "LogFolder" }
         if ($logFolderNode -ne $null) {
@@ -109,6 +109,7 @@
         - "{{ start_service_result }}"
         - "{{ service_status_before }}"
         - "{{ service_status_after }}"
+      when: item.stdout_lines is defined and item.stdout_lines | length > 0
     - name: Print Task Outputs
       debug:
         var: task_outputs
