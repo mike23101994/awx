@@ -1,6 +1,6 @@
 ---
 - name: Manage Application Server
-  hosts: [web_servers]
+  hosts: all
   gather_facts: no
   tasks:
     - name: Check Service Status
