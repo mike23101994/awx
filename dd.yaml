@@ -29,10 +29,6 @@
       ignore_errors: no
       register: python_install_output
 
-    - name: Display Python Installation Output
-      debug:
-        var: python_install_output.stdout_lines
-
     - name: Check if Ansible is Installed
       ansible.windows.win_command: 'where ansible'
       register: ansible_check_result
@@ -46,13 +42,42 @@
       ignore_errors: no
       register: ansible_install_output
 
-    - name: Display Ansible Installation Output
-      debug:
-        var: ansible_install_output.stdout_lines
-
     - name: Set PATH to include Ansible
       ansible.windows.win_path:
         elements:
         - 'C:\Program Files\Python38\Scripts;'
       when: "'INFO: Could not find files for the given pattern(s).' in ansible_check_result.stderr_lines"  # Only run if Ansible is installed
+
+     # Cleanup the Python installer (optional)
+    - name: Remove Python Installer
+      ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.9.7-amd64.exe" -Force
+      when: python_install_output.failed == false and python_check_result.rc != 0
+
+    - name: Capture Task Outputs
+      set_fact:
+        task_outputs: "{{ task_outputs | default([]) + [item.stdout_lines] }}"
+      with_items:
+        - "{{ python_check_result }}"
+        - "{{ python_install_output }}"
+        - "{{ ansible_check_result }}"
+        - "{{ ansible_install_output }}"
+      when: item.stdout_lines is defined and item.stdout_lines | length > 0
+    - name: Print Task Outputs
+      debug:
+        var: task_outputs
+    
+    - name: Create Destination Folder for Python Installer
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
+
+    - name: Store Task Outputs in output.txt
+      copy:
+        content: "{{ task_outputs | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
+        remote_src: yes
+
+
+
 
