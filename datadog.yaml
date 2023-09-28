@@ -38,7 +38,7 @@
       win_wait_for:
         path: "C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe"
         timeout: 300  # Adjust the timeout as needed
-      when: datadog_service.status != "running"
+      when: datadog_service.status['Status'] != "Running"
 
     - name: Remove the C:\Temp\datadog-agent.msi folder
       win_shell: Remove-Item -Path 'C:\Temp\datadog-agent.msi' -Recurse -Force
