@@ -19,10 +19,6 @@
       win_shell: test-path "C:\Program Files\Datadog\Datadog Agent"
       register: installed_result
 
-    - name: Debug installed_result
-      debug:
-        var: installed_result
-
     - name: Install Datadog Agent if not already installed
       win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       async: 1800
@@ -42,18 +38,9 @@
       set_fact:
         service_status_output: "{{ datadog_service_status.stdout_lines }}"
 
-    - name: Debug Service Status
-      debug:
-        var: service_status_output
-
     - name: Determine Service Status
       set_fact:
         is_datadog_agent_running: "{{ service_status_output | join('\n') | regex_search('Running') is not none }}"
-
-    - name: Debug Service Status (Boolean)
-      debug:
-        var: is_datadog_agent_running
-
 
     - name: Wait for the Datadog Agent to start
       win_wait_for:
@@ -64,6 +51,33 @@
     - name: Remove the C:\Temp\datadog-agent.msi folder
       win_shell: Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
     
+
+    - name: Debug All Variables
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - "{{ folder_status }}"
+        - "{{ download_result }}"
+        - "{{ installed_result }}"
+        - "{{ agent_install }}"
+        - "{{ service_status_output }}"
+        - "{{ is_datadog_agent_running }}"
+
+        # Add more variables to debug here
+      register: debug_output
+
+    - name: Create Destination Folder for Logs
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
+
+    - name: Store Debug Output in output.txt
+      copy:
+        content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
+        remote_src: yes
+
     
   handlers:
     - name: Reboot if required
