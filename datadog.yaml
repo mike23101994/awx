@@ -28,6 +28,11 @@
       async: 1800
       poll: 0
       ignore_errors: yes
+      register: agent_install
+    
+    - name: Debug agent install
+      debug:
+        var: agent_install
 
     - name: Check the status of the Datadog Agent
       win_service:
