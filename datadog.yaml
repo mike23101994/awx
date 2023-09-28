@@ -19,8 +19,12 @@
       win_shell: test-path "C:\Program Files\Datadog\Datadog Agent"
       register: installed_result
 
+    - name: Debug installed_result
+      debug:
+        var: installed_result
+
     - name: Install Datadog Agent if not already installed
-      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY={{ lookup('aws_ssm', 'DatadogAPIKey', region='your_aws_region') }}
+      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       async: 1800
       poll: 0
       when: not installed_result.stdout
