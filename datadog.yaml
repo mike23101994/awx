@@ -3,48 +3,50 @@
   hosts: all
   gather_facts: no
   tasks:
-    - name: Create Destination Folder for Python Installer
-      ansible.windows.win_file:
-        path: C:\Ansible-Logs
-        state: directory
-      ignore_errors: yes 
-    
-    - name: Download Datadog Agent Installer
+    - name: Check if folder exists
+      win_stat:
+        path: C:\Temp\datadog-agent.msi
+      register: folder_status
+
+    - name: Download Datadog Agent Installer if folder doesn't exist
       win_get_url:
         url: https://ddagent-windows-stable.s3.amazonaws.com/datadog-agent-7-latest.amd64.msi
         dest: C:\Temp\datadog-agent.msi
+      when: not folder_status.stat.exists
       register: download_result
 
-    - name: Install Datadog Agent
-      win_command: msiexec.exe /i C:\temp\datadog-agent.msi /quiet APIKEY={{ lookup('aws_ssm', 'Datadog_API_Key', region='eu-central-1') }}
-      when: download_result.changed
+    - name: Check if Datadog Agent is already installed
+      win_shell: test-path "C:\Program Files\Datadog\Datadog Agent"
+      register: installed_result
+
+    - name: Install Datadog Agent if not already installed
+      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY={{ lookup('aws_ssm', 'DatadogAPIKey', region='your_aws_region') }}
       async: 1800
       poll: 0
-      register: install_result
-    
-    - name: Check Datadog Service Status
-      win_service:
-        name: datadog-agent
-        state: started
-      when: install_result.rc == 0
+      when: not installed_result.stdout
 
-    - name: Wait for Datadog Agent to Start
-      win_shell: |
-        $service = Get-Service -Name "datadog-agent"
-        $service.WaitForStatus('Running', [TimeSpan]::FromMinutes(5))
-      when: install_result.rc == 0
-    
-    - name: Remove Datadog Agent Installer
-      win_file:
-        path: C:\Temp\datadog-agent.msi
-        state: absent
+    - name: Check the status of the Datadog Agent
+      win_service:
+        name: datadogagent
+      register: datadog_service
+
+    - name: Wait for the Datadog Agent to start
+      win_wait_for:
+        path: "C:\Program Files\Datadog\Datadog Agent\bin\agent.exe"
+        timeout: 300  # Adjust the timeout as needed
+      when: datadog_service.status != "running"
+
+    - name: Remove the C:\Temp\datadog-agent.msi folder
+      win_shell: Remove-Item -Path 'C:\Temp\datadog-agent.msi' -Recurse -Force
     
     - name: Capture Task Outputs
       set_fact:
         task_outputs: "{{ task_outputs | default([]) + [item.stdout_lines] }}"
       with_items:
+        - "{{ folder_status }}"
         - "{{ download_result }}"
-        - "{{ install_result }}"
+        - "{{ installed_result }}"
+        - "{{ datadog_service }}"
       when: item.stdout_lines is defined and item.stdout_lines | length > 0
     
     - name: Print Task Outputs
