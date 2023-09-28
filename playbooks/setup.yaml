@@ -1,0 +1,117 @@
+---
+- name: Setup the windows host to run Ansible playbooks
+  hosts: all 
+  become: yes
+  become_method: runas
+  become_user: Administrator 
+  gather_facts: false
+  tasks:
+    - name: Create Destination Folder for Ansible Logs
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes
+      register: ansible_folder_status
+
+    - name: Create Destination Folder for All Installer
+      ansible.windows.win_file:
+        path: C:\Temp
+        state: directory
+      ignore_errors: yes  # Ignore errors if the directory already exists
+      register: installer_folder_status
+
+    - name: Check if Python is Installed
+      ansible.windows.win_command: 'where python'
+      register: python_check_result
+      ignore_errors: yes  # Ignore errors if 'where python' command fails
+
+    - name: Install Python if not installed
+      ansible.windows.win_shell: |
+        $url = "https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe"
+        $outputFile = "C:\Temp\python-3.8.10-amd64.exe"
+        Invoke-WebRequest -Uri $url -OutFile $outputFile
+        Start-Process -Wait -FilePath $outputFile -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1"
+      when: "'INFO: Could not find files for the given pattern(s).' in python_check_result.stderr_lines"
+      environment:
+        PATH: "C:\Program Files\Python38"
+      ignore_errors: no
+      register: python_install_output
+    
+    - name: Check if Datadog msi exists
+      win_stat:
+        path: C:\Temp\datadog-agent-7-latest.amd64.msi
+      register: folder_status
+
+    - name: Download Datadog Agent Installer if folder doesn't exist
+      win_get_url:
+        url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi
+        dest: C:\Temp\datadog-agent-7-latest.amd64.msi
+      when: not folder_status.stat.exists
+      register: download_result
+
+    - name: Check if Datadog Agent is already installed
+      win_shell: test-path "C:\Program Files\Datadog\Datadog Agent"
+      register: installed_result
+
+    - name: Install Datadog Agent if not already installed
+      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
+      async: 1800
+      poll: 0
+      ignore_errors: yes
+      register: agent_install
+
+    - name: Check Datadog Agent Service Status
+      win_shell: Get-Service -Name "Datadog Agent"
+      register: datadog_service_status
+
+    - name: Extract Status from Service Status
+      set_fact:
+        service_status_output: "{{ datadog_service_status.stdout_lines }}"
+
+    - name: Determine DataDog Service Status
+      set_fact:
+        is_datadog_agent_running: "{{ service_status_output | join('\n') | regex_search('Running') is not none }}"
+
+    - name: Wait for the Datadog Agent to start
+      win_wait_for:
+        path: "C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe"
+        timeout: 600  # Adjust the timeout as needed
+      when: is_datadog_agent_running == false
+
+    - name: Remove the C:\Temp\datadog-agent.msi folder
+      win_shell: Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
+    
+    - name: Remove Python Installer
+      ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.9.7-amd64.exe" -Force
+      when: python_install_output.failed == false and python_check_result.rc != 0
+
+    - name: Debug All Variables
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - { name: "Create Destination Folder for Ansible Logs", value: "{{ ansible_folder_status }}" }
+        - { name: "Create Destination Folder for All Installer", value: "{{ installer_folder_status }}" }
+        - { name: "Check if Python is Installed", value: "{{ python_check_result }}" }
+        - { name: "Install Python if not installed", value: "{{ python_install_output }}" }
+        - { name: "Check if Datadog msi exists", value: "{{ folder_status }}" }
+        - { name: "Download Datadog Agent Installer if folder doesn't exist", value: "{{ download_result }}" }
+        - { name: "Check if Datadog Agent is already installed", value: "{{ installed_result }}" }
+        - { name: "Install Datadog Agent if not already installed", value: "{{ agent_install }}" }
+        - { name: "Check Datadog Agent Service Status", value: "{{ datadog_service_status }}" }
+        - { name: "Extract Status from Service Status", value: "{{ service_status_output }}" }
+        - { name: "Determine DataDog Service Status", value: "{{ is_datadog_agent_running }}" }
+      register: debug_output
+
+    - name: Store Debug Output in output.txt
+      copy:
+        content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.log"
+        remote_src: yes
+   
+  handlers:
+    - name: Reboot if required
+      win_reboot:
+      when: datadog_service.changed
+
+
+    

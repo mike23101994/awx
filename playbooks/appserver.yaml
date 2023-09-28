@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: no
   tasks:
-    - name: Check Service Status
+    - name: Check AppServer Service Status
       win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Every Angle Application Server" } | Select-Object DisplayName, Status
       register: service_status
       failed_when: false
@@ -96,36 +96,32 @@
       failed_when: false
 
 
-    - name: Capture Task Outputs
-      set_fact:
-        task_outputs: "{{ task_outputs | default([]) + [item.stdout_lines] }}"
-      with_items:
-        - "{{ service_status }}"
-        - "{{ result }}"
-        - "{{ stop_service_result }}"
-        - "{{ move_log_result }}"
-        - "{{ update_log_folder_result }}"
-        - "{{ new_result }}"
-        - "{{ start_service_result }}"
-        - "{{ service_status_before }}"
-        - "{{ service_status_after }}"
-      when: item.stdout_lines is defined and item.stdout_lines | length > 0
-    - name: Print Task Outputs
+    - name: Debug All Variables
       debug:
-        var: task_outputs
-    
-    - name: Create Destination Folder for Python Installer
+        msg: "{{ item }}"
+      loop:
+        - { name: "Check AppServer Service Status", value: "{{ service_status }}" }
+        - { name: "Read Configuration File", value: "{{ result }}" }
+        - { name: "Stop Service from Services.msc", value: "{{ stop_service_result }}" }
+        - { name: "Check if Service is Running", value: "{{ service_status_before }}" }
+        - { name: "Move Log File", value: "{{ move_log_result }}" }
+        - { name: "Update LogFolder", value: "{{ update_log_folder_result }}" }
+        - { name: "Read changed Log File Location", value: "{{ new_result }}" }
+        - { name: "Start Service", value: "{{ start_service_result }}" }
+        - { name: "Check Service Status", value: "{{ service_status_after }}" }
+
+
+        # Add more variables to debug here
+      register: debug_output
+
+    - name: Create Destination Folder for Logs
       ansible.windows.win_file:
         path: C:\Ansible-Logs
         state: directory
       ignore_errors: yes 
 
-    - name: Store Task Outputs in output.txt
+    - name: Store Debug Output in output.txt
       copy:
-        content: "{{ task_outputs | join('\n') }}"
-        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
+        content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.log"
         remote_src: yes
-    
-
-
-    

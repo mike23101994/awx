@@ -1,0 +1,30 @@
+---
+- name: Run PowerShell Script
+  hosts: all  # Replace with the name of your target host group or use 'all' to target all hosts
+  gather_facts: no
+
+  tasks:
+    - name: Execute PowerShell Script
+      ansible.windows.win_command: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:/EASetups/powershellscripts/content.ps1
+      register: ps_script_output
+
+    
+    - name: Debug All Variables
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - { name: "Execute PowerShell Script", value: "{{ ps_script_output }}" }
+      register: debug_output
+
+    - name: Create Destination Folder for Logs
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
+
+    - name: Store Debug Output in output.txt
+      copy:
+        content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.log"
+        remote_src: yes
+
