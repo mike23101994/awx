@@ -34,19 +34,32 @@
       debug:
         var: agent_install
 
-    - name: Check Service Status
-      win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Datadog Agent" }
-      register: datadog_service
-    
-    - name: Debug agent install
+    - name: Check Datadog Agent Service Status
+      win_shell: Get-Service -Name "Datadog Agent"
+      register: datadog_service_status
+
+    - name: Extract Status from Service Status
+      set_fact:
+        service_status_output: "{{ datadog_service_status.stdout_lines }}"
+
+    - name: Debug Service Status
       debug:
-        var: datadog_service
+        var: service_status_output
+
+    - name: Determine Service Status
+      set_fact:
+        is_datadog_agent_running: "{{ 'Running' in service_status_output }}"
+
+    - name: Debug Service Status (Boolean)
+      debug:
+        var: is_datadog_agent_running
+
 
     - name: Wait for the Datadog Agent to start
       win_wait_for:
         path: "C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe"
         timeout: 600  # Adjust the timeout as needed
-      when: datadog_service.rc != 0
+      when: is_datadog_agent_running == false
 
     - name: Remove the C:\Temp\datadog-agent.msi folder
       win_shell: Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
