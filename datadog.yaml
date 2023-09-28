@@ -48,7 +48,7 @@
 
     - name: Determine Service Status
       set_fact:
-        is_datadog_agent_running: "{{ 'Running' in service_status_output }}"
+        is_datadog_agent_running: "{{ 'Running' in service_status_output[2] }}"
 
     - name: Debug Service Status (Boolean)
       debug:
@@ -64,26 +64,7 @@
     - name: Remove the C:\Temp\datadog-agent.msi folder
       win_shell: Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
     
-    - name: Capture Task Outputs
-      set_fact:
-        task_outputs: "{{ task_outputs | default([]) + [item.stdout_lines] }}"
-      with_items:
-        - "{{ folder_status }}"
-        - "{{ download_result }}"
-        - "{{ installed_result }}"
-        - "{{ datadog_service }}"
-      when: item.stdout_lines is defined and item.stdout_lines | length > 0
     
-    - name: Print Task Outputs
-      debug:
-        var: task_outputs
-
-    - name: Store Task Outputs in output.txt
-      copy:
-        content: "{{ task_outputs | join('\n') }}"
-        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
-        remote_src: yes
-
   handlers:
     - name: Reboot if required
       win_reboot:
