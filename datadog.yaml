@@ -35,7 +35,7 @@
         var: agent_install
 
     - name: Check Service Status
-      win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Datadog Agent" } | Select-Object DisplayName, Status
+      win_shell: Get-Service | Where-Object { $_.DisplayName -eq "Datadog Agent" }
       register: datadog_service
     
     - name: Debug agent install
