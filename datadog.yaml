@@ -27,7 +27,7 @@
       win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       async: 1800
       poll: 0
-      when: installed_result.stdout == "False\\r\\n"
+      ignore_errors: yes
 
     - name: Check the status of the Datadog Agent
       win_service:
@@ -66,5 +66,5 @@
   handlers:
     - name: Reboot if required
       win_reboot:
-      when: install_result.rc == 3010
+      when: datadog_service.changed
 
