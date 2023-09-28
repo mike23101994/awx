@@ -27,7 +27,7 @@
       win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       async: 1800
       poll: 0
-      ignore_errors: yes
+      when: installed_result.stdout == "False\\r\\n"
 
     - name: Check the status of the Datadog Agent
       win_service:
@@ -41,7 +41,7 @@
     - name: Wait for the Datadog Agent to start
       win_wait_for:
         path: "C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe"
-        timeout: 300  # Adjust the timeout as needed
+        timeout: 600  # Adjust the timeout as needed
       when: datadog_service.state != "running"
 
     - name: Remove the C:\Temp\datadog-agent.msi folder
