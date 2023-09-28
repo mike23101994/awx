@@ -48,7 +48,7 @@
 
     - name: Determine Service Status
       set_fact:
-        is_datadog_agent_running: "{{ 'Running' in service_status_output[2] }}"
+        is_datadog_agent_running: "{{ service_status_output | join('\n') | regex_search('Running') is not none }}"
 
     - name: Debug Service Status (Boolean)
       debug:
