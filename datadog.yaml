@@ -73,7 +73,7 @@
     - name: Store Debug Output in output.txt
       copy:
         content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
-        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ lookup('pipe', \"python -c 'import datetime; print(datetime.datetime.now().strftime(\"%Y%m%d%H%M%S\"))'\") }}.log"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.log"
         remote_src: yes
 
     
