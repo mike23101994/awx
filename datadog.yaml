@@ -1,6 +1,6 @@
 ---
 - name: Install and Configure Datadog Agent on Windows
-  hosts: windows-host
+  hosts: all
   gather_facts: no
   tasks:
     - name: Create Destination Folder for Python Installer
