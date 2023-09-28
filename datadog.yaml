@@ -25,10 +25,6 @@
       poll: 0
       ignore_errors: yes
       register: agent_install
-    
-    - name: Debug agent install
-      debug:
-        var: agent_install
 
     - name: Check Datadog Agent Service Status
       win_shell: Get-Service -Name "Datadog Agent"
@@ -38,7 +34,7 @@
       set_fact:
         service_status_output: "{{ datadog_service_status.stdout_lines }}"
 
-    - name: Determine Service Status
+    - name: Determine DataDog Service Status
       set_fact:
         is_datadog_agent_running: "{{ service_status_output | join('\n') | regex_search('Running') is not none }}"
 
@@ -56,12 +52,14 @@
       debug:
         msg: "{{ item }}"
       loop:
-        - "{{ folder_status }}"
-        - "{{ download_result }}"
-        - "{{ installed_result }}"
-        - "{{ agent_install }}"
-        - "{{ service_status_output }}"
-        - "{{ is_datadog_agent_running }}"
+        - { name: "Check if folder exists", value: "{{ folder_status }}" }
+        - { name: "Download Datadog Agent Installer if folder doesn't exist", value: "{{ download_result }}" }
+        - { name: "Check if Datadog Agent is already installed", value: "{{ installed_result }}" }
+        - { name: "Install Datadog Agent if not already installed", value: "{{ agent_install }}" }
+        - { name: "Check Datadog Agent Service Status", value: "{{ datadog_service_status }}" }
+        - { name: "Extract Status from Service Status", value: "{{ service_status_output }}" }
+        - { name: "Determine DataDog Service Status", value: "{{ is_datadog_agent_running }}" }
+
 
         # Add more variables to debug here
       register: debug_output
@@ -75,7 +73,7 @@
     - name: Store Debug Output in output.txt
       copy:
         content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
-        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
+        dest: ""C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ ansible_date_time.epoch }}.log""
         remote_src: yes
 
     
