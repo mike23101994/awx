@@ -1,0 +1,63 @@
+---
+- name: Install and Configure Datadog Agent on Windows
+  hosts: windows-host
+  gather_facts: no
+  tasks:
+    - name: Create Destination Folder for Python Installer
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
+    
+    - name: Download Datadog Agent Installer
+      win_get_url:
+        url: https://s3.amazonaws.com/dd-agent/datadog-agent-7-latest.amd64.msi
+        dest: C:\Temp\datadog-agent.msi
+      register: download_result
+
+    - name: Install Datadog Agent
+      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY={{ lookup('community.general.awx_credential', 'Datadog_API_Cred', 'username=datadog_user') }}
+      when: download_result.changed
+      async: 1800
+      poll: 0
+      register: install_result
+    
+    - name: Check Datadog Service Status
+      win_service:
+        name: datadog-agent
+        state: started
+      when: install_result.rc == 0
+
+    - name: Wait for Datadog Agent to Start
+      win_shell: |
+        $service = Get-Service -Name "datadog-agent"
+        $service.WaitForStatus('Running', [TimeSpan]::FromMinutes(5))
+      when: install_result.rc == 0
+    
+    - name: Remove Datadog Agent Installer
+      win_file:
+        path: C:\Temp\datadog-agent.msi
+        state: absent
+    
+    - name: Capture Task Outputs
+      set_fact:
+        task_outputs: "{{ task_outputs | default([]) + [item.stdout_lines] }}"
+      with_items:
+        - "{{ download_result }}"
+        - "{{ install_result }}"
+      when: item.stdout_lines is defined and item.stdout_lines | length > 0
+    
+    - name: Print Task Outputs
+      debug:
+        var: task_outputs
+
+    - name: Store Task Outputs in output.txt
+      copy:
+        content: "{{ task_outputs | join('\n') }}"
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}.txt"
+        remote_src: yes
+
+  handlers:
+    - name: Reboot if required
+      win_reboot:
+      when: install_result.rc == 3010
