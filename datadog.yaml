@@ -5,13 +5,13 @@
   tasks:
     - name: Check if folder exists
       win_stat:
-        path: C:\Temp\datadog-agent.msi
+        path: C:\Temp\datadog-agent-7-latest.amd64
       register: folder_status
 
     - name: Download Datadog Agent Installer if folder doesn't exist
       win_get_url:
         url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi
-        dest: C:\Temp\datadog-agent.msi
+        dest: C:\Temp\datadog-agent-7-latest.amd64
       when: not folder_status.stat.exists
       register: download_result
 
@@ -24,7 +24,7 @@
         var: installed_result
 
     - name: Install Datadog Agent if not already installed
-      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
+      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       async: 1800
       poll: 0
       when: installed_result.stdout == "False\\r\\n"
