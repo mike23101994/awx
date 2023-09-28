@@ -11,7 +11,7 @@
     
     - name: Download Datadog Agent Installer
       win_get_url:
-        url: https://s3.amazonaws.com/dd-agent/datadog-agent-7-latest.amd64.msi
+        url: https://ddagent-windows-stable.s3.amazonaws.com/datadog-agent-7-latest.amd64.msi
         dest: C:\Temp\datadog-agent.msi
       register: download_result
 
