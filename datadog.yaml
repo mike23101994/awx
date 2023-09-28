@@ -73,7 +73,7 @@
     - name: Store Debug Output in output.txt
       copy:
         content: "{{ debug_output.results | map(attribute='msg') | join('\n') }}"
-        dest: ""C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ ansible_date_time.epoch }}.log""
+        dest: "C:/Ansible-Logs/output_{{ inventory_hostname }}_{{ ansible_date_time.epoch }}.log"
         remote_src: yes
 
     
