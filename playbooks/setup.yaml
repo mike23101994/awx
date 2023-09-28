@@ -83,7 +83,6 @@
     
     - name: Remove Python Installer
       ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.9.7-amd64.exe" -Force
-      when: python_install_output.failed == false and python_check_result.rc != 0
 
     - name: Debug All Variables
       debug:
