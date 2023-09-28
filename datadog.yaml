@@ -10,7 +10,7 @@
 
     - name: Download Datadog Agent Installer if folder doesn't exist
       win_get_url:
-        url: https://ddagent-windows-stable.s3.amazonaws.com/datadog-agent-7-latest.amd64.msi
+        url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi
         dest: C:\Temp\datadog-agent.msi
       when: not folder_status.stat.exists
       register: download_result
