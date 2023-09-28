@@ -16,7 +16,7 @@
       register: download_result
 
     - name: Install Datadog Agent
-      win_command: msiexec.exe /i C:\Temp\datadog-agent.msi /quiet APIKEY={{ lookup('community.general.awx_credential', 'Datadog_API_Cred', 'username=datadog_user') }}
+      win_command: msiexec.exe /i C:\temp\datadog-agent.msi /quiet APIKEY={{ lookup('aws_ssm', 'Datadog_API_Key', region='eu-central-1') }}
       when: download_result.changed
       async: 1800
       poll: 0
@@ -61,3 +61,4 @@
     - name: Reboot if required
       win_reboot:
       when: install_result.rc == 3010
+
