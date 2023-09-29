@@ -6,6 +6,12 @@
   become_user: Administrator 
   gather_facts: false
   tasks:
+    - name: Creat Folders
+      ansible.windows.win_shell: |
+        mkdir "C:\Temp"
+        mkdir "C:\Ansible-Logs"
+      ignore_errors: yes
+
     - name: Check if Python is Installed
       ansible.windows.win_command: 'where python'
       register: python_check_result
