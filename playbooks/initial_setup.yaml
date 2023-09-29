@@ -48,8 +48,6 @@
 
     - name: Install Datadog Agent if not already installed
       win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
-      async: 1800
-      poll: 0
       ignore_errors: yes
       register: agent_install
 
@@ -71,11 +69,12 @@
         timeout: 600  # Adjust the timeout as needed
       when: is_datadog_agent_running == false
 
-    - name: Remove the C:\Temp\datadog-agent.msi folder
-      win_shell: Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
-    
-    - name: Remove Python Installer
-      ansible.windows.win_shell: Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Force
+    - name: Remove .exe and .msi 
+      ansible.windows.win_shell: |
+        Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
+        Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Force
+      ignore_errors: yes
+      register: removed_output
 
   handlers:
     - name: Reboot if required
