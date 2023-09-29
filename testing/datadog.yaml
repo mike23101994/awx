@@ -3,8 +3,12 @@
   hosts: all
   gather_facts: no
   tasks:
+    - name: Creat Folders
+      ansible.windows.win_shell: |
+        mkdir "C:\Temp"
+        mkdir "C:\Ansible-Logs"
+      ignore_errors: yes
     - name: Check if folder exists
-      win_shell: mkdir "C:\Temp"
       win_stat:
         path: C:\Temp\datadog-agent-7-latest.amd64.msi
       register: folder_status
