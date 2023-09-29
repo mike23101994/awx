@@ -1,9 +1,6 @@
 ---
 - name: Setup the windows host to run Ansible playbooks
   hosts: all 
-  become: yes
-  become_method: runas
-  become_user: Administrator 
   gather_facts: false
   tasks:
     - name: Creat Folders
