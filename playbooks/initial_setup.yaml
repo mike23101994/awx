@@ -25,7 +25,12 @@
         PATH: "C:\Program Files\Python38"
       ignore_errors: no
       register: python_install_output
-    
+
+    - name: Install Boto3
+      ansible.windows.win_shell: pip install boto3
+      ignore_errors: yes
+      register: boto3_install
+
     - name: Check if Datadog msi exists
       win_stat:
         path: C:\Temp\datadog-agent-7-latest.amd64.msi
@@ -50,6 +55,7 @@
       win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=554649bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       ignore_errors: yes
       register: agent_install
+
 
     - name: Check Datadog Agent Service Status
       win_shell: Get-Service -Name "Datadog Agent"
@@ -91,6 +97,7 @@
       loop:
         - { name: "Check if Python is Installed", value: "{{ python_check_result }}" }
         - { name: "Install Python if not installed", value: "{{ python_install_output }}" }
+        - { name: "Install Boto3", value: "{{ boto3_install }}" }
         - { name: "Check if Datadog msi exists", value: "{{ folder_status }}" }
         - { name: "Download Datadog Agent Installer if folder doesn't exist", value: "{{ download_result }}" }
         - { name: "Check if Datadog Agent is already installed", value: "{{ installed_result }}" }
