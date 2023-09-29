@@ -90,7 +90,7 @@
     - name: Wait for the Datadog Agent to start
       win_wait_for:
         path: "C:\\Program Files\\Datadog\\Datadog Agent\\bin\\agent.exe"
-        timeout: 600  # Adjust the timeout as needed
+        timeout: 600  
       when: is_datadog_agent_running == false
 
     - name: Remove .exe and .msi 
@@ -98,6 +98,7 @@
         Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
         Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Recurse -Force
         Remove-Item -Path "C:\\datadog_api.txt" -Force
+        Remove-Item -Path "C:\\Temp" -Force
       ignore_errors: yes
       register: removed_output
 

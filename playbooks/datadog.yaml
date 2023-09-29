@@ -27,7 +27,7 @@
       register: installed_result
     
     - name: Install Datadog Agent if not already installed
-      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=yyrtd9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
+      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=
       ignore_errors: yes
       register: agent_install
 
