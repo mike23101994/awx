@@ -31,6 +31,25 @@
       ignore_errors: yes
       register: boto3_install
 
+    - name: Execute PowerShell to get datadog api key
+      ansible.windows.win_shell: |
+        $secretName = "DataDog_API_Key"
+        $secret = Get-SECSecretValue -SecretId $secretName
+        $apiKey = ConvertFrom-Json $secret.SecretString | Select-Object -ExpandProperty DataDog_API_Key
+        $apiKeyFilePath = "C:\datadog_api.txt"
+        $apiKey | Set-Content -Path $apiKeyFilePath
+      register: retrieve_output
+      ignore_errors: no
+    
+    - name: Get DataDog API Key from the file
+      win_shell: Get-Content "C:\\datadog_api.txt"
+      register: api_key_result 
+      ignore_errors: no
+    
+    - name: Extract API Key from the output
+      set_fact:
+        api_key: "{{ api_key_result.stdout | regex_replace('\\r\\n$', '') | split('\n') | first }}"
+
     - name: Check if Datadog msi exists
       win_stat:
         path: C:\Temp\datadog-agent-7-latest.amd64.msi
@@ -52,10 +71,9 @@
         var: installed_result
 
     - name: Install Datadog Agent if not already installed
-      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=554649bb0fb16-2e71-4ce6-b6aa-43038d34fa13
+      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY={{ api_key }}
       ignore_errors: yes
       register: agent_install
-
 
     - name: Check Datadog Agent Service Status
       win_shell: Get-Service -Name "Datadog Agent"
@@ -79,6 +97,7 @@
       ansible.windows.win_shell: |
         Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
         Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Recurse -Force
+        Remove-Item -Path "C:\\datadog_api.txt" -Force
       ignore_errors: yes
       register: removed_output
 
@@ -107,12 +126,6 @@
         - { name: "Determine DataDog Service Status", value: "{{ is_datadog_agent_running }}" }
       register: debug_output
       ignore_errors: yes
-
-    - name: Create Destination Folder for Logs
-      ansible.windows.win_file:
-        path: C:\Ansible-Logs
-        state: directory
-      ignore_errors: yes 
 
     - name: Store Debug Output in output.txt
       copy:
