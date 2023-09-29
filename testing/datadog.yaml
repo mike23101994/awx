@@ -4,9 +4,11 @@
   gather_facts: no
   tasks:
     - name: Check if folder exists
+      win_shell: mkdir "C:\Temp"
       win_stat:
         path: C:\Temp\datadog-agent-7-latest.amd64.msi
       register: folder_status
+      ignore_errors: yes
 
     - name: Download Datadog Agent Installer if folder doesn't exist
       win_get_url:
