@@ -6,20 +6,6 @@
   become_user: Administrator 
   gather_facts: false
   tasks:
-    - name: Create Destination Folder for Ansible Logs
-      ansible.windows.win_file:
-        path: C:\Ansible-Logs
-        state: directory
-      ignore_errors: yes
-      register: ansible_folder_status
-
-    - name: Create Destination Folder for All Installer
-      ansible.windows.win_file:
-        path: C:\Temp
-        state: directory
-      ignore_errors: yes  # Ignore errors if the directory already exists
-      register: installer_folder_status
-
     - name: Check if Python is Installed
       ansible.windows.win_command: 'where python'
       register: python_check_result
@@ -114,6 +100,12 @@
         - { name: "Determine DataDog Service Status", value: "{{ is_datadog_agent_running }}" }
       register: debug_output
       ignore_errors: yes
+
+    - name: Create Destination Folder for Logs
+      ansible.windows.win_file:
+        path: C:\Ansible-Logs
+        state: directory
+      ignore_errors: yes 
 
     - name: Store Debug Output in output.txt
       copy:
