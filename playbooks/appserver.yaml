@@ -96,6 +96,11 @@
       failed_when: false
 
 
+    
+- name: Debug All Variables
+  hosts: all
+  gather_facts: no
+  tasks:
     - name: Debug All Variables
       debug:
         msg: "{{ item }}"
@@ -109,11 +114,7 @@
         - { name: "Read changed Log File Location", value: "{{ new_result }}" }
         - { name: "Start Service", value: "{{ start_service_result }}" }
         - { name: "Check Service Status", value: "{{ service_status_after }}" }
-
-
-        # Add more variables to debug here
       register: debug_output
-      always: yes
       ignore_errors: yes
 
     - name: Create Destination Folder for Logs
