@@ -47,7 +47,7 @@
         var: installed_result
 
     - name: Install Datadog Agent if not already installed
-      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=9bb0fb16-2e71-4ce6-b6aa-43038d34fa13
+      win_command: msiexec.exe /i C:\Temp\datadog-agent-7-latest.amd64.msi /quiet APIKEY=554649bb0fb16-2e71-4ce6-b6aa-43038d34fa13
       ignore_errors: yes
       register: agent_install
 
@@ -72,7 +72,7 @@
     - name: Remove .exe and .msi 
       ansible.windows.win_shell: |
         Remove-Item -Path 'C:\Temp\datadog-agent-7-latest.amd64.msi' -Recurse -Force
-        Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Force
+        Remove-Item -Path "C:\Temp\python-3.8.10-amd64.exe" -Recurse -Force
       ignore_errors: yes
       register: removed_output
 
@@ -89,8 +89,6 @@
       debug:
         msg: "{{ item }}"
       loop:
-        - { name: "Create Destination Folder for Ansible Logs", value: "{{ ansible_folder_status }}" }
-        - { name: "Create Destination Folder for All Installer", value: "{{ installer_folder_status }}" }
         - { name: "Check if Python is Installed", value: "{{ python_check_result }}" }
         - { name: "Install Python if not installed", value: "{{ python_install_output }}" }
         - { name: "Check if Datadog msi exists", value: "{{ folder_status }}" }
