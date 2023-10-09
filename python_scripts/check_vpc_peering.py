@@ -46,6 +46,10 @@ def assume_role_and_check_peering(source_vpc_id, vpc_ids):
                 peering_status[vpc_id] = "Active"
             else:
                 peering_status[vpc_id] = "Inactive"
+        for vpc_id, status in peering_status.items():
+            print(f"VPC ID: {vpc_id}")
+            print(f"VPC Peering Status: {status}")
+            print("-" * 30)
         
         return peering_status
 
