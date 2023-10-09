@@ -1,76 +1,70 @@
+import sys
 import boto3
 
-# Initialize the Boto3 EC2 client
-ec2_client = boto3.client('ec2')
-
-# Initialize the Boto3 VPC client
-vpc_client = boto3.client('ec2')
-
-# Define the EC2 instance ID, Security Group ID, Route Table ID, Subnet ID, and VPC ID
-instance_id = 'your_instance_id'
-security_group_id = 'your_security_group_id'
-route_table_id = 'your_route_table_id'
-subnet_id = 'your_subnet_id'
-vpc_id = 'your_vpc_id'
-
-# Function to check if a VPC is peered with another VPC
-def is_vpc_peered(vpc_id):
-    response = vpc_client.describe_vpc_peering_connections(
-        Filters=[
-            {
-                'Name': 'status-code',
-                'Values': ['active']
-            },
-            {
-                'Name': 'accepter-vpc-info.vpc-id',
-                'Values': [vpc_id]
-            }
-        ]
-    )
-    return len(response['VpcPeeringConnections']) > 0
-
-# Function to check if a resource (e.g., instance, security group, route table, subnet) is associated with a VPC
-def is_resource_in_vpc(resource_id, resource_type):
+def assume_role_and_check_peering(source_vpc_id, vpc_ids):
     try:
-        if resource_type == 'instance':
-            response = ec2_client.describe_instances(InstanceIds=[resource_id])
-            vpc_id_of_resource = response['Reservations'][0]['Instances'][0]['VpcId']
-        elif resource_type == 'security_group':
-            response = ec2_client.describe_security_groups(GroupIds=[resource_id])
-            vpc_id_of_resource = response['SecurityGroups'][0]['VpcId']
-        elif resource_type == 'route_table':
-            response = ec2_client.describe_route_tables(RouteTableIds=[resource_id])
-            vpc_id_of_resource = response['RouteTables'][0]['VpcId']
-        elif resource_type == 'subnet':
-            response = ec2_client.describe_subnets(SubnetIds=[resource_id])
-            vpc_id_of_resource = response['Subnets'][0]['VpcId']
-        else:
-            return False
+        # Initialize the STS client to assume the role
+        sts = boto3.client('sts')
+        
+        # Assume the role
+        assumed_role = sts.assume_role(
+            RoleArn='arn:aws:iam::873579038761:role/Trusted-Role',
+            RoleSessionName='AssumedRoleSession'
+        )
 
-        return is_vpc_peered(vpc_id_of_resource)
+        # Extract temporary credentials from the assumed role
+        credentials = assumed_role['Credentials']
+
+        # Initialize the EC2 client with the assumed role's credentials
+        ec2 = boto3.client(
+            'ec2',
+            region_name='eu-west-1',
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken']
+        )
+
+        # Initialize a dictionary to store peering status for each VPC
+        peering_status = {}
+
+        # Continue with checking VPC peering as before
+        for vpc_id in vpc_ids:
+            response = ec2.describe_vpc_peering_connections(
+                Filters=[
+                    {
+                        'Name': 'requester-vpc-info.vpc-id',
+                        'Values': [source_vpc_id]
+                    },
+                    {
+                        'Name': 'accepter-vpc-info.vpc-id',
+                        'Values': [vpc_id]
+                    }
+                ]
+            )
+
+            if response['VpcPeeringConnections']:
+                peering_status[vpc_id] = "Active"
+            else:
+                peering_status[vpc_id] = "Inactive"
+        
+        return peering_status
+
     except Exception as e:
-        return False
+        print(f"Error: {str(e)}")
+        return {}
 
-# Check if the EC2 instance is part of a peered VPC
-if is_resource_in_vpc(instance_id, 'instance'):
-    print(f"The EC2 instance with ID {instance_id} is part of a peered VPC.")
-else:
-    print(f"The EC2 instance with ID {instance_id} is not part of a peered VPC.")
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python check_vpc_peering.py <source_vpc_id> <accepter_vpc_id1> <accepter_vpc_id2> ...")
+        sys.exit(1)
 
-# Check if the Security Group is part of a peered VPC
-if is_resource_in_vpc(security_group_id, 'security_group'):
-    print(f"The Security Group with ID {security_group_id} is part of a peered VPC.")
-else:
-    print(f"The Security Group with ID {security_group_id} is not part of a peered VPC.")
+    source_vpc_id = 'vpc-073ff6f707df9d0f9'
+    accepter_vpc_ids = sys.argv[1:]
 
-# Check if the Route Table is part of a peered VPC
-if is_resource_in_vpc(route_table_id, 'route_table'):
-    print(f"The Route Table with ID {route_table_id} is part of a peered VPC.")
-else:
-    print(f"The Route Table with ID {route_table_id} is not part of a peered VPC.")
+    peering_status = assume_role_and_check_peering(source_vpc_id, accepter_vpc_ids)
 
-# Check if the Subnet is part of a peered VPC
-if is_resource_in_vpc(subnet_id, 'subnet'):
-    print(f"The Subnet with ID {subnet_id} is part of a peered VPC.")
-else:
-    print(f"The Subnet with ID {subnet_id} is not part of a peered VPC.")
+    # Print the peering status for each VPC
+    for vpc_id, status in peering_status.items():
+        print(f"VPC ID: {vpc_id}")
+        print(f"VPC Peering Status: {status}")
+        print("-" * 30)
